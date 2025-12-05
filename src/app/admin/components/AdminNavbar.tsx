@@ -2,17 +2,22 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-type NavbarProps = {
-  currentPage?: "dashboard" | "calendar" | "tracking" | "ideas";
+type AdminNavbarProps = {
+  isAuthenticated: boolean;
 };
 
-export default function Navbar({ currentPage }: NavbarProps) {
+export default function AdminNavbar({ isAuthenticated }: AdminNavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
   const navRef = useRef<HTMLDivElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
 
-  // Update indicator position when currentPage changes
+  const isActivitiesPage = pathname.startsWith("/admin/activities");
+  const isIdeasPage = pathname.startsWith("/admin/ideas");
+
+  // Update indicator position when pathname changes
   useEffect(() => {
     const updateIndicator = () => {
       if (!navRef.current) return;
@@ -30,7 +35,12 @@ export default function Navbar({ currentPage }: NavbarProps) {
     // Small delay to ensure DOM is ready
     const timeout = setTimeout(updateIndicator, 50);
     return () => clearTimeout(timeout);
-  }, [currentPage]);
+  }, [pathname]);
+
+  const handleLogout = async () => {
+    const { logout } = await import("@/app/admin/actions");
+    await logout();
+  };
 
   return (
     <header
@@ -39,9 +49,9 @@ export default function Navbar({ currentPage }: NavbarProps) {
       }`}
     >
       <div className="flex h-16 items-center justify-between sm:justify-center gap-8 px-6">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/admin" className="flex items-center gap-2">
           <h1 className="text-xl font-bold tracking-tight text-slate-900">
-            Intima Tracker
+            Admin Panel
           </h1>
         </Link>
 
@@ -57,32 +67,21 @@ export default function Navbar({ currentPage }: NavbarProps) {
             }}
           />
           <Link
-            href="/"
-            data-active={currentPage === "dashboard"}
+            href="/admin/activities"
+            data-active={isActivitiesPage}
             className={`relative z-10 rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-300 ${
-              currentPage === "dashboard"
+              isActivitiesPage
                 ? "text-indigo-600"
                 : "text-slate-600 hover:text-indigo-600"
             }`}
           >
-            Dashboard
+            Activities
           </Link>
           <Link
-            href="/calendar"
-            data-active={currentPage === "calendar"}
+            href="/admin/ideas"
+            data-active={isIdeasPage}
             className={`relative z-10 rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-300 ${
-              currentPage === "calendar"
-                ? "text-indigo-600"
-                : "text-slate-600 hover:text-indigo-600"
-            }`}
-          >
-            Calendar
-          </Link>
-          <Link
-            href="/ideas"
-            data-active={currentPage === "ideas"}
-            className={`relative z-10 rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-300 ${
-              currentPage === "ideas"
+              isIdeasPage
                 ? "text-indigo-600"
                 : "text-slate-600 hover:text-indigo-600"
             }`}
@@ -90,6 +89,24 @@ export default function Navbar({ currentPage }: NavbarProps) {
             Ideas
           </Link>
         </nav>
+
+        {/* Desktop Actions */}
+        <div className="hidden sm:flex items-center gap-2">
+          <Link
+            href="/"
+            className="rounded-full px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-all"
+          >
+            ← Home
+          </Link>
+          {isAuthenticated && (
+            <button
+              onClick={handleLogout}
+              className="rounded-full px-4 py-1.5 text-sm font-medium bg-slate-900 text-white hover:bg-slate-800 transition-all"
+            >
+              Logout
+            </button>
+          )}
+        </div>
 
         {/* Mobile Menu Button */}
         <button
@@ -141,31 +158,20 @@ export default function Navbar({ currentPage }: NavbarProps) {
           <div className="border-t border-slate-200/50 px-4 pb-4 pt-2">
             <div className="space-y-1">
               <Link
-                href="/"
+                href="/admin/activities"
                 className={`block rounded-xl px-3 py-2 text-base font-medium transition-colors ${
-                  currentPage === "dashboard"
+                  isActivitiesPage
                     ? "bg-indigo-50 text-indigo-600"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 }`}
                 onClick={() => setIsOpen(false)}
               >
-                Dashboard
+                Activities
               </Link>
               <Link
-                href="/calendar"
+                href="/admin/ideas"
                 className={`block rounded-xl px-3 py-2 text-base font-medium transition-colors ${
-                  currentPage === "calendar"
-                    ? "bg-indigo-50 text-indigo-600"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-                onClick={() => setIsOpen(false)}
-              >
-                Calendar
-              </Link>
-              <Link
-                href="/ideas"
-                className={`block rounded-xl px-3 py-2 text-base font-medium transition-colors ${
-                  currentPage === "ideas"
+                  isIdeasPage
                     ? "bg-indigo-50 text-indigo-600"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 }`}
@@ -173,6 +179,26 @@ export default function Navbar({ currentPage }: NavbarProps) {
               >
                 Ideas
               </Link>
+              <div className="border-t border-slate-200/50 mt-2 pt-2">
+                <Link
+                  href="/"
+                  className="block rounded-xl px-3 py-2 text-base font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  ← Back to Home
+                </Link>
+                {isAuthenticated && (
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full text-left block rounded-xl px-3 py-2 text-base font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors"
+                  >
+                    Logout
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

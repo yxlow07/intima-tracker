@@ -115,7 +115,7 @@ ADMIN_PASSWORD=your_secure_password_here
 
 ## Project Structure
 
-``
+```
 src/
 ├── app/                    # Next.js App Router pages
 │   ├── admin/             # Admin dashboard
@@ -127,6 +127,6 @@ src/
 ├── lib/                   # Utilities and database functions
 │   └── schema.sql        # SQLite database schema
 └── public/               # Static assets
-``
+```
 
 ## Learn More
