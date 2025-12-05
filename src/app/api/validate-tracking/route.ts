@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ valid: false, error: "Token is required" }, { status: 400 });
         }
 
-        const activity = getActivityByToken(token);
+        const activity = await getActivityByToken(token);
 
         if (activity) {
             return NextResponse.json({ valid: true });

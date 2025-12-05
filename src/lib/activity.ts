@@ -1,4 +1,4 @@
-import db from "./db";
+import { getDb } from "./mongodb";
 import { v4 as uuidv4 } from "uuid";
 
 export type FormType = "SAP" | "ASF";
@@ -30,123 +30,145 @@ export type Log = {
 
 export type NewLog = Omit<Log, "id" | "timestamp">;
 
-export function createActivity(activity: NewActivity): Activity {
+async function getActivitiesCollection() {
+  const db = await getDb();
+  return db.collection<Activity>("activities");
+}
+
+async function getLogsCollection() {
+  const db = await getDb();
+  return db.collection<Log>("logs");
+}
+
+export async function createActivity(activity: NewActivity): Promise<Activity> {
+  const collection = await getActivitiesCollection();
   const uniqueToken = uuidv4();
-  const stmt = db.prepare(
-    "INSERT INTO Activity (id, activityName, description, activityDate, activityType, affiliate, status, uniqueToken, formType, sapActivityId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-  );
-  stmt.run(
-    uuidv4(),
-    activity.activityName,
-    activity.description || null,
-    activity.activityDate || null,
-    activity.activityType || null,
-    activity.affiliate || null,
-    activity.status,
+  const now = new Date().toISOString();
+  
+  const newActivity: Activity = {
+    id: uuidv4(),
+    activityName: activity.activityName,
+    description: activity.description || undefined,
+    activityDate: activity.activityDate || undefined,
+    activityType: activity.activityType || undefined,
+    affiliate: activity.affiliate || undefined,
+    status: activity.status,
+    publicViewCount: 0,
     uniqueToken,
-    activity.formType || "SAP",
-    activity.sapActivityId || null,
-  );
-  return getActivityByToken(uniqueToken)!; // Refetch to get all fields including defaults
+    formType: activity.formType || "SAP",
+    sapActivityId: activity.sapActivityId || undefined,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await collection.insertOne(newActivity);
+  return newActivity;
 }
 
-export function getAllActivities(): Activity[] {
-  const stmt = db.prepare("SELECT * FROM Activity ORDER BY createdAt DESC");
-  return stmt.all() as Activity[];
+export async function getAllActivities(): Promise<Activity[]> {
+  const collection = await getActivitiesCollection();
+  return collection.find().sort({ createdAt: -1 }).toArray();
 }
 
-export function getActivityById(id: string): Activity | undefined {
-  const stmt = db.prepare("SELECT * FROM Activity WHERE id = ?");
-  return stmt.get(id) as Activity | undefined;
+export async function getActivityById(id: string): Promise<Activity | undefined> {
+  const collection = await getActivitiesCollection();
+  const activity = await collection.findOne({ id });
+  return activity || undefined;
 }
 
-export function getActivityByToken(token: string): Activity | undefined {
-  const stmt = db.prepare("SELECT * FROM Activity WHERE uniqueToken = ?");
-  return stmt.get(token) as Activity | undefined;
+export async function getActivityByToken(token: string): Promise<Activity | undefined> {
+  const collection = await getActivitiesCollection();
+  const activity = await collection.findOne({ uniqueToken: token });
+  return activity || undefined;
 }
 
-export function incrementViewCount(id: string): void {
-  const stmt = db.prepare(
-    "UPDATE Activity SET publicViewCount = publicViewCount + 1 WHERE id = ?",
-  );
-  stmt.run(id);
+export async function incrementViewCount(id: string): Promise<void> {
+  const collection = await getActivitiesCollection();
+  await collection.updateOne({ id }, { $inc: { publicViewCount: 1 } });
 }
 
-export function updateActivity(
+export async function updateActivity(
   id: string,
   updates: Partial<Omit<Activity, "id" | "uniqueToken" | "createdAt" | "publicViewCount">>,
-): Activity | undefined {
-  const fields = Object.keys(updates)
-    .map((key) => `${key} = ?`)
-    .join(", ");
-  const values = Object.values(updates);
-
-  if (fields.length === 0) {
-    return getActivityById(id); // Nothing to update
+): Promise<Activity | undefined> {
+  const collection = await getActivitiesCollection();
+  
+  if (Object.keys(updates).length === 0) {
+    return getActivityById(id);
   }
 
-  const stmt = db.prepare(
-    `UPDATE Activity SET ${fields}, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+  await collection.updateOne(
+    { id },
+    { $set: { ...updates, updatedAt: new Date().toISOString() } }
   );
-  stmt.run(...values, id);
   return getActivityById(id);
 }
 
-export function deleteActivity(id: string): void {
-  const stmt = db.prepare("DELETE FROM Activity WHERE id = ?");
-  stmt.run(id);
+export async function deleteActivity(id: string): Promise<void> {
+  const collection = await getActivitiesCollection();
+  const logsCollection = await getLogsCollection();
+  
+  // Delete associated logs first
+  await logsCollection.deleteMany({ activityId: id });
+  await collection.deleteOne({ id });
 }
 
-export function getUnderReviewActivities(): Activity[] {
-  const stmt = db.prepare("SELECT * FROM Activity WHERE status = 'Under Review' ORDER BY createdAt DESC");
-  return stmt.all() as Activity[];
+export async function getUnderReviewActivities(): Promise<Activity[]> {
+  const collection = await getActivitiesCollection();
+  return collection.find({ status: "Under Review" }).sort({ createdAt: -1 }).toArray();
 }
 
 // Form type specific functions
-export function getActivitiesByFormType(formType: FormType): Activity[] {
-  const stmt = db.prepare("SELECT * FROM Activity WHERE formType = ? ORDER BY createdAt DESC");
-  return stmt.all(formType) as Activity[];
+export async function getActivitiesByFormType(formType: FormType): Promise<Activity[]> {
+  const collection = await getActivitiesCollection();
+  return collection.find({ formType }).sort({ createdAt: -1 }).toArray();
 }
 
-export function getAllSAPs(): Activity[] {
+export async function getAllSAPs(): Promise<Activity[]> {
   return getActivitiesByFormType("SAP");
 }
 
-export function getAllASFs(): Activity[] {
+export async function getAllASFs(): Promise<Activity[]> {
   return getActivitiesByFormType("ASF");
 }
 
-export function getSAPActivitiesForCalendar(): Activity[] {
-  const stmt = db.prepare("SELECT * FROM Activity WHERE formType = 'SAP' AND status = 'Approved' ORDER BY activityDate ASC");
-  return stmt.all() as Activity[];
+export async function getSAPActivitiesForCalendar(): Promise<Activity[]> {
+  const collection = await getActivitiesCollection();
+  return collection.find({ formType: "SAP", status: "Approved" }).sort({ activityDate: 1 }).toArray();
 }
 
-export function getLinkedASF(sapActivityId: string): Activity | undefined {
-  const stmt = db.prepare("SELECT * FROM Activity WHERE sapActivityId = ? AND formType = 'ASF'");
-  return stmt.get(sapActivityId) as Activity | undefined;
+export async function getLinkedASF(sapActivityId: string): Promise<Activity | undefined> {
+  const collection = await getActivitiesCollection();
+  const activity = await collection.findOne({ sapActivityId, formType: "ASF" });
+  return activity || undefined;
 }
 
-export function getLinkedSAP(asfActivity: Activity): Activity | undefined {
+export async function getLinkedSAP(asfActivity: Activity): Promise<Activity | undefined> {
   if (!asfActivity.sapActivityId) return undefined;
   return getActivityById(asfActivity.sapActivityId);
 }
 
 // Log functions
-export function createLog(log: NewLog): Log {
-  const id = uuidv4();
-  const stmt = db.prepare(
-    "INSERT INTO Logs (id, log, activityId) VALUES (?, ?, ?)",
-  );
-  stmt.run(id, log.log || null, log.activityId);
-  return getLogById(id)!;
+export async function createLog(log: NewLog): Promise<Log> {
+  const collection = await getLogsCollection();
+  const newLog: Log = {
+    id: uuidv4(),
+    timestamp: new Date().toISOString(),
+    log: log.log || undefined,
+    activityId: log.activityId,
+  };
+  
+  await collection.insertOne(newLog);
+  return newLog;
 }
 
-export function getLogById(id: string): Log | undefined {
-  const stmt = db.prepare("SELECT * FROM Logs WHERE id = ?");
-  return stmt.get(id) as Log | undefined;
+export async function getLogById(id: string): Promise<Log | undefined> {
+  const collection = await getLogsCollection();
+  const log = await collection.findOne({ id });
+  return log || undefined;
 }
 
-export function getLogsForActivity(activityId: string): Log[] {
-  const stmt = db.prepare("SELECT * FROM Logs WHERE activityId = ? ORDER BY timestamp DESC");
-  return stmt.all(activityId) as Log[];
+export async function getLogsForActivity(activityId: string): Promise<Log[]> {
+  const collection = await getLogsCollection();
+  return collection.find({ activityId }).sort({ timestamp: -1 }).toArray();
 }

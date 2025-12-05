@@ -15,7 +15,7 @@ export async function generateMetadata({
   params,
 }: TrackingPageProps): Promise<Metadata> {
   const { token } = await params;
-  const activity = getActivityByToken(token);
+  const activity = await getActivityByToken(token);
 
   return {
     title: activity ? `Activity Status - ${activity.activityName}` : "Activity Not Found",
@@ -44,11 +44,11 @@ function getStatusColor(status: string) {
 
 export default async function TrackingPage({ params }: TrackingPageProps) {
   const { token } = await params;
-  const activity = getActivityByToken(token);
+  const activity = await getActivityByToken(token);
   
   // Get linked SAP (if this is an ASF) or linked ASF (if this is a SAP)
-  const linkedSAP = activity?.formType === "ASF" ? getLinkedSAP(activity) : null;
-  const linkedASF = activity?.formType === "SAP" ? getLinkedASF(activity.id) : null;
+  const linkedSAP = activity?.formType === "ASF" ? await getLinkedSAP(activity) : null;
+  const linkedASF = activity?.formType === "SAP" ? await getLinkedASF(activity.id) : null;
 
   // Determine which status to display in the progress bar
   // If viewing a SAP and there's a linked ASF, show the ASF status

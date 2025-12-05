@@ -39,7 +39,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+    <div className="flex min-h-[75vh] items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-slate-200">
         <div className="bg-slate-900 px-8 py-6">
           <h2 className="text-center text-2xl font-bold text-white">

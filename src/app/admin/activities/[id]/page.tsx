@@ -14,7 +14,7 @@ export async function generateMetadata({
   params,
 }: ActivityDetailPageProps): Promise<Metadata> {
   const { id } = await params;
-  const activity = getActivityById(id);
+  const activity = await getActivityById(id);
 
   return {
     title: activity ? `${activity.activityName} - Admin` : "Activity Not Found",
@@ -43,7 +43,7 @@ function getStatusColor(status: string) {
 
 export default async function ActivityDetailPage({ params }: ActivityDetailPageProps) {
   const { id } = await params;
-  const activity = getActivityById(id);
+  const activity = await getActivityById(id);
 
   if (!activity) {
     return (
@@ -68,8 +68,8 @@ export default async function ActivityDetailPage({ params }: ActivityDetailPageP
   }
 
   const isASF = activity.formType === "ASF";
-  const linkedSAP = isASF ? getLinkedSAP(activity) : null;
-  const linkedASF = !isASF ? getLinkedASF(activity.id) : null;
+  const linkedSAP = isASF ? await getLinkedSAP(activity) : null;
+  const linkedASF = !isASF ? await getLinkedASF(activity.id) : null;
 
   // Build the full tracking URL using the current host
   const headersList = await headers();

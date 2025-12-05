@@ -1,4 +1,4 @@
-import db from "./db";
+import { getDb } from "./mongodb";
 import { v4 as uuidv4 } from "uuid";
 
 export type AffiliateIdeaStatus = "Pending Approval" | "Approved" | "Rejected";
@@ -7,7 +7,7 @@ export type AffiliateIdea = {
   id: string;
   affiliateName: string;
   description?: string;
-  positionsOpen?: string; // JSON string array stored in DB
+  positionsOpen?: string[]; // Now stored as array directly in MongoDB
   contact: string;
   studentEmail: string;
   status: AffiliateIdeaStatus;
@@ -23,64 +23,72 @@ export type NewAffiliateIdea = {
   studentEmail: string;
 };
 
+async function getAffiliateIdeasCollection() {
+  const db = await getDb();
+  return db.collection<AffiliateIdea>("affiliateIdeas");
+}
+
 // Validate student email format: xx@student.newinti.edu.my
 export function validateStudentEmail(email: string): boolean {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@student\.newinti\.edu\.my$/i;
   return emailRegex.test(email);
 }
 
-export function createAffiliateIdea(idea: NewAffiliateIdea): AffiliateIdea {
-  const id = uuidv4();
-  const positionsOpenJson = idea.positionsOpen ? JSON.stringify(idea.positionsOpen) : null;
+export async function createAffiliateIdea(idea: NewAffiliateIdea): Promise<AffiliateIdea> {
+  const collection = await getAffiliateIdeasCollection();
+  const now = new Date().toISOString();
   
-  const stmt = db.prepare(
-    "INSERT INTO AffiliateIdea (id, affiliateName, description, positionsOpen, contact, studentEmail, status) VALUES (?, ?, ?, ?, ?, ?, ?)"
+  const newIdea: AffiliateIdea = {
+    id: uuidv4(),
+    affiliateName: idea.affiliateName,
+    description: idea.description || undefined,
+    positionsOpen: idea.positionsOpen || undefined,
+    contact: idea.contact,
+    studentEmail: idea.studentEmail,
+    status: "Pending Approval",
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  await collection.insertOne(newIdea);
+  return newIdea;
+}
+
+export async function getAllAffiliateIdeas(): Promise<AffiliateIdea[]> {
+  const collection = await getAffiliateIdeasCollection();
+  return collection.find().sort({ createdAt: -1 }).toArray();
+}
+
+export async function getApprovedAffiliateIdeas(): Promise<AffiliateIdea[]> {
+  const collection = await getAffiliateIdeasCollection();
+  return collection.find({ status: "Approved" }).sort({ createdAt: -1 }).toArray();
+}
+
+export async function getPendingAffiliateIdeas(): Promise<AffiliateIdea[]> {
+  const collection = await getAffiliateIdeasCollection();
+  return collection.find({ status: "Pending Approval" }).sort({ createdAt: -1 }).toArray();
+}
+
+export async function getAffiliateIdeaById(id: string): Promise<AffiliateIdea | undefined> {
+  const collection = await getAffiliateIdeasCollection();
+  const idea = await collection.findOne({ id });
+  return idea || undefined;
+}
+
+export async function updateAffiliateIdeaStatus(id: string, status: AffiliateIdeaStatus): Promise<AffiliateIdea | undefined> {
+  const collection = await getAffiliateIdeasCollection();
+  await collection.updateOne(
+    { id },
+    { $set: { status, updatedAt: new Date().toISOString() } }
   );
-  stmt.run(
-    id,
-    idea.affiliateName,
-    idea.description || null,
-    positionsOpenJson,
-    idea.contact,
-    idea.studentEmail,
-    "Pending Approval"
-  );
-  
-  return getAffiliateIdeaById(id)!;
-}
-
-export function getAllAffiliateIdeas(): AffiliateIdea[] {
-  const stmt = db.prepare("SELECT * FROM AffiliateIdea ORDER BY createdAt DESC");
-  return stmt.all() as AffiliateIdea[];
-}
-
-export function getApprovedAffiliateIdeas(): AffiliateIdea[] {
-  const stmt = db.prepare("SELECT * FROM AffiliateIdea WHERE status = 'Approved' ORDER BY createdAt DESC");
-  return stmt.all() as AffiliateIdea[];
-}
-
-export function getPendingAffiliateIdeas(): AffiliateIdea[] {
-  const stmt = db.prepare("SELECT * FROM AffiliateIdea WHERE status = 'Pending Approval' ORDER BY createdAt DESC");
-  return stmt.all() as AffiliateIdea[];
-}
-
-export function getAffiliateIdeaById(id: string): AffiliateIdea | undefined {
-  const stmt = db.prepare("SELECT * FROM AffiliateIdea WHERE id = ?");
-  return stmt.get(id) as AffiliateIdea | undefined;
-}
-
-export function updateAffiliateIdeaStatus(id: string, status: AffiliateIdeaStatus): AffiliateIdea | undefined {
-  const stmt = db.prepare(
-    "UPDATE AffiliateIdea SET status = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?"
-  );
-  stmt.run(status, id);
   return getAffiliateIdeaById(id);
 }
 
-export function updateAffiliateIdea(
+export async function updateAffiliateIdea(
   id: string,
   updates: Partial<Omit<AffiliateIdea, "id" | "createdAt">>
-): AffiliateIdea | undefined {
+): Promise<AffiliateIdea | undefined> {
+  const collection = await getAffiliateIdeasCollection();
   const allowedFields = ["affiliateName", "description", "positionsOpen", "contact", "studentEmail", "status"];
   const filteredUpdates = Object.entries(updates).filter(([key]) => allowedFields.includes(key));
   
@@ -88,29 +96,24 @@ export function updateAffiliateIdea(
     return getAffiliateIdeaById(id);
   }
 
-  const fields = filteredUpdates.map(([key]) => `${key} = ?`).join(", ");
-  const values = filteredUpdates.map(([, value]) => {
-    if (Array.isArray(value)) {
-      return JSON.stringify(value);
-    }
-    return value;
-  });
-
-  const stmt = db.prepare(
-    `UPDATE AffiliateIdea SET ${fields}, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`
+  const updateObj = Object.fromEntries(filteredUpdates);
+  await collection.updateOne(
+    { id },
+    { $set: { ...updateObj, updatedAt: new Date().toISOString() } }
   );
-  stmt.run(...values, id);
   return getAffiliateIdeaById(id);
 }
 
-export function deleteAffiliateIdea(id: string): void {
-  const stmt = db.prepare("DELETE FROM AffiliateIdea WHERE id = ?");
-  stmt.run(id);
+export async function deleteAffiliateIdea(id: string): Promise<void> {
+  const collection = await getAffiliateIdeasCollection();
+  await collection.deleteOne({ id });
 }
 
-// Helper to parse positions from DB
-export function parsePositions(positionsOpen?: string): string[] {
+// Helper to parse positions - now just returns the array directly since MongoDB stores arrays natively
+export function parsePositions(positionsOpen?: string[] | string): string[] {
   if (!positionsOpen) return [];
+  if (Array.isArray(positionsOpen)) return positionsOpen;
+  // Fallback for legacy string data
   try {
     return JSON.parse(positionsOpen);
   } catch {

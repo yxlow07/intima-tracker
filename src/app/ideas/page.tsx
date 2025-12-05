@@ -7,7 +7,7 @@ type AffiliateIdea = {
   id: string;
   affiliateName: string;
   description?: string;
-  positionsOpen?: string;
+  positionsOpen?: string[] | string;
   contact: string;
   studentEmail: string;
   status: string;
@@ -15,8 +15,11 @@ type AffiliateIdea = {
   updatedAt: string;
 };
 
-function parsePositions(positionsOpen?: string): string[] {
+function parsePositions(positionsOpen?: string[] | string): string[] {
   if (!positionsOpen) return [];
+  // If it's already an array (MongoDB), return it directly
+  if (Array.isArray(positionsOpen)) return positionsOpen;
+  // Fallback for legacy string data
   try {
     return JSON.parse(positionsOpen);
   } catch {

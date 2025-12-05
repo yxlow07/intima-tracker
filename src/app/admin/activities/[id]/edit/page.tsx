@@ -13,7 +13,7 @@ export async function generateMetadata({
   params,
 }: EditActivityPageProps): Promise<Metadata> {
   const { id } = await params;
-  const activity = getActivityById(id);
+  const activity = await getActivityById(id);
 
   return {
     title: activity ? `Edit Activity - ${activity.activityName}` : "Edit Activity",
@@ -27,9 +27,9 @@ export default async function EditActivityPage({
   params,
 }: EditActivityPageProps) {
   const { id } = await params;
-  const activity = getActivityById(id);
+  const activity = await getActivityById(id);
   const isASF = activity?.formType === "ASF";
-  const linkedSAP = isASF && activity ? getLinkedSAP(activity) : null;
+  const linkedSAP = isASF && activity ? await getLinkedSAP(activity) : null;
 
   if (!activity) {
     return (
@@ -63,7 +63,7 @@ export default async function EditActivityPage({
     const activityType = formData.get("activityType") as string;
     const affiliate = formData.get("affiliate") as string;
 
-    updateActivity(id, {
+    await updateActivity(id, {
       activityName,
       description,
       status,

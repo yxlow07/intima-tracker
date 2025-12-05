@@ -13,6 +13,6 @@ export async function logout() {
 
 export async function deleteActivityAction(formData: FormData) {
   const id = formData.get("id") as string;
-  deleteActivity(id);
+  await deleteActivity(id);
   revalidatePath("/admin/activities");
 }

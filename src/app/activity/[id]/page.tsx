@@ -13,7 +13,7 @@ export async function generateMetadata({
   params,
 }: ActivityPageProps): Promise<Metadata> {
   const { id } = await params;
-  const activity = getActivityById(id);
+  const activity = await getActivityById(id);
 
   return {
     title: activity ? `${activity.activityName} - Intima Tracker` : "Activity Not Found",
@@ -25,7 +25,7 @@ export async function generateMetadata({
 
 export default async function ActivityPage({ params }: ActivityPageProps) {
   const { id } = await params;
-  const activity = getActivityById(id);
+  const activity = await getActivityById(id);
 
   if (!activity) {
     return (

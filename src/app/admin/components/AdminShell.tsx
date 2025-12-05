@@ -2,7 +2,7 @@ import AdminNavbar from "./AdminNavbar";
 
 export default function AdminShell({ children, isAuthenticated }: { children: React.ReactNode, isAuthenticated: boolean }) {
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="=min-h-[80vh] bg-slate-50">
             <AdminNavbar isAuthenticated={isAuthenticated} />
             
             {/* Page content */}

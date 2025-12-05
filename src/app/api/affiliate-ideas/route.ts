@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     // Only admin should see all (including pending/rejected)
     // Public users only see approved ideas
-    const ideas = showAll ? getAllAffiliateIdeas() : getApprovedAffiliateIdeas();
+    const ideas = showAll ? await getAllAffiliateIdeas() : await getApprovedAffiliateIdeas();
 
     return NextResponse.json(ideas);
   } catch (error) {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newIdea = createAffiliateIdea({
+    const newIdea = await createAffiliateIdea({
       affiliateName: affiliateName.trim(),
       description: description?.trim() || undefined,
       positionsOpen: Array.isArray(positionsOpen) ? positionsOpen.filter((p: string) => p.trim()) : undefined,

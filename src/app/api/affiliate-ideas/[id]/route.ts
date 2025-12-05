@@ -16,7 +16,7 @@ type RouteParams = {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
-    const idea = getAffiliateIdeaById(id);
+    const idea = await getAffiliateIdeaById(id);
 
     if (!idea) {
       return NextResponse.json(
@@ -40,7 +40,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const body = await request.json();
 
-    const idea = getAffiliateIdeaById(id);
+    const idea = await getAffiliateIdeaById(id);
     if (!idea) {
       return NextResponse.json(
         { error: "Affiliate idea not found" },
@@ -57,7 +57,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
           { status: 400 }
         );
       }
-      const updatedIdea = updateAffiliateIdeaStatus(id, body.status);
+      const updatedIdea = await updateAffiliateIdeaStatus(id, body.status);
       return NextResponse.json(updatedIdea);
     }
 
@@ -79,7 +79,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       updates.status = body.status;
     }
 
-    const updatedIdea = updateAffiliateIdea(id, updates);
+    const updatedIdea = await updateAffiliateIdea(id, updates);
     return NextResponse.json(updatedIdea);
   } catch (error) {
     console.error("Error updating affiliate idea:", error);
@@ -94,7 +94,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     
-    const idea = getAffiliateIdeaById(id);
+    const idea = await getAffiliateIdeaById(id);
     if (!idea) {
       return NextResponse.json(
         { error: "Affiliate idea not found" },
@@ -102,7 +102,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    deleteAffiliateIdea(id);
+    await deleteAffiliateIdea(id);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting affiliate idea:", error);

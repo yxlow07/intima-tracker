@@ -26,8 +26,17 @@ function getStatusColor(status: string) {
 }
 
 export default async function ManageActivities() {
-  const sapActivities = getAllSAPs();
-  const asfActivities = getAllASFs();
+  const sapActivities = await getAllSAPs();
+  const asfActivities = await getAllASFs();
+  
+  // Pre-fetch all linked SAPs for ASF activities
+  const linkedSAPsMap = new Map<string, Awaited<ReturnType<typeof getLinkedSAP>>>();
+  await Promise.all(
+    asfActivities.map(async (asf) => {
+      const linkedSAP = await getLinkedSAP(asf);
+      linkedSAPsMap.set(asf.id, linkedSAP);
+    })
+  );
 
   return (
     <div className="mx-auto max-w-6xl space-y-12">
@@ -247,7 +256,7 @@ export default async function ManageActivities() {
                     </thead>
                     <tbody className="divide-y divide-slate-200 bg-white">
                       {asfActivities.map((activity) => {
-                        const linkedSAP = getLinkedSAP(activity);
+                        const linkedSAP = linkedSAPsMap.get(activity.id);
                         return (
                           <tr key={activity.id}>
                             <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium sm:pl-6">

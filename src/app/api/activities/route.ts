@@ -9,11 +9,11 @@ export async function GET(request: NextRequest) {
 
         let activities;
         if (forCalendar) {
-            activities = getSAPActivitiesForCalendar();
+            activities = await getSAPActivitiesForCalendar();
         } else if (formType) {
-            activities = getActivitiesByFormType(formType);
+            activities = await getActivitiesByFormType(formType);
         } else {
-            activities = getAllActivities();
+            activities = await getAllActivities();
         }
 
         return NextResponse.json(activities);
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         
-        const activity = createActivity({
+        const activity = await createActivity({
             activityName: body.activityName,
             description: body.description || undefined,
             activityDate: body.activityDate || undefined,
