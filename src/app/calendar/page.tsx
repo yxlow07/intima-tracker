@@ -96,8 +96,9 @@ export default function CalendarPage() {
             });
         }
 
-        // Add next month's days to complete the grid
-        const remainingDays = 42 - days.length; // 6 rows * 7 days
+        // Add next month's days to complete the grid (5 weeks max = 35 days)
+        const targetDays = 35; // 5 rows * 7 days
+        const remainingDays = Math.max(0, targetDays - days.length);
         for (let day = 1; day <= remainingDays; day++) {
             const date = new Date(year, month + 1, day);
             days.push({
@@ -107,7 +108,8 @@ export default function CalendarPage() {
             });
         }
 
-        return days;
+        // Trim to exactly 35 days if we have more
+        return days.slice(0, 35);
     };
 
     const getDaysInWeek = (startDate: Date): DayCell[] => {
@@ -178,7 +180,7 @@ export default function CalendarPage() {
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-[80vh] bg-slate-50">
             <Navbar currentPage="calendar" />
 
             <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">

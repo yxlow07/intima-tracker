@@ -29,7 +29,7 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
 
   if (!activity) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-[80vh] bg-slate-50">
         <Navbar />
         <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="rounded-2xl bg-white p-12 text-center shadow-sm ring-1 ring-slate-200">
@@ -82,7 +82,7 @@ export default async function ActivityPage({ params }: ActivityPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-[80vh] bg-slate-50">
       <Navbar />
 
       <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">

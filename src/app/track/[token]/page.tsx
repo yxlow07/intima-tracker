@@ -58,7 +58,7 @@ export default async function TrackingPage({ params }: TrackingPageProps) {
 
   if (!activity) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-[80vh]">
         <Navbar currentPage="tracking" />
         <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="rounded-2xl bg-white p-12 text-center shadow-sm ring-1 ring-slate-200">
@@ -98,7 +98,7 @@ export default async function TrackingPage({ params }: TrackingPageProps) {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-[80vh]">
       <Navbar currentPage="tracking" />
 
       <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">

@@ -122,7 +122,7 @@ export default function AffiliateIdeasPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-[80vh] bg-slate-50">
       <Navbar currentPage="ideas" />
 
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -233,13 +233,13 @@ export default function AffiliateIdeasPage() {
       {/* Read More Modal */}
       {selectedIdea && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
             <div
               className="fixed inset-0 bg-slate-900/50 transition-opacity"
               onClick={() => setSelectedIdea(null)}
             />
 
-            <div className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+            <div className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all w-full max-w-lg mx-4 sm:mx-0">
               <div className="px-6 py-5 border-b border-slate-200">
                 <h3 className="text-lg font-bold text-slate-900">
                   {selectedIdea.affiliateName}
@@ -294,7 +294,7 @@ export default function AffiliateIdeasPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
             <div
               className="fixed inset-0 bg-slate-900/50 transition-opacity"
               onClick={() => {
@@ -305,7 +305,7 @@ export default function AffiliateIdeasPage() {
               }}
             />
 
-            <div className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+            <div className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all w-full max-w-lg mx-4 sm:mx-0">
               {success ? (
                 <div className="p-8 text-center">
                   <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">

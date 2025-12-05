@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-[80vh]">
       <Navbar currentPage="dashboard" />
 
       <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
