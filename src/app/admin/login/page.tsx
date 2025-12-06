@@ -25,8 +25,8 @@ export default function AdminLogin() {
     if (response.ok) {
       // Redirect to original path or default admin dashboard
       const redirectPath = searchParams.get("redirect") || "/admin";
-      router.refresh(); // Force refresh to update server components (layout) with new cookie
-      router.push(redirectPath);
+      // Use window.location for a full page reload to ensure cookie is picked up
+      window.location.href = redirectPath;
       return;
     }
 

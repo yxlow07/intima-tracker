@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/ && cp .env .next/standalone/.env",
+    "hotStart": "node -r dotenv/config .next/standalone/server.js dotenv_config_path=.next/standalone/.env",
+    "runProd": "npm run build && npm run hotStart",
     "start": "next start",
     "lint": "eslint"
   },
@@ -13,6 +16,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "firebase": "^12.6.0",
     "googleapis": "^166.0.0",
     "jose": "^6.1.2",
