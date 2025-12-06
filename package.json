@@ -5,9 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "postbuild": "cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/ && cp .env .next/standalone/.env",
+    "postbuild": "cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/",
     "hotStart": "node -r dotenv/config .next/standalone/server.js dotenv_config_path=.next/standalone/.env",
-    "runProd": "npm run build && npm run hotStart",
+    "runProdOnDevice": "npm run build && npm run hotStart",
+    "serveProd": "node .next/standalone/server.js",
     "start": "next start",
     "lint": "eslint"
   },
