@@ -16,6 +16,7 @@ export default function AdminNavbar({ isAuthenticated }: AdminNavbarProps) {
 
   const isActivitiesPage = pathname.startsWith("/admin/activities");
   const isIdeasPage = pathname.startsWith("/admin/ideas");
+  const isSchedulePage = pathname.startsWith("/admin/schedule");
 
   // Update indicator position when pathname changes
   useEffect(() => {
@@ -87,6 +88,17 @@ export default function AdminNavbar({ isAuthenticated }: AdminNavbarProps) {
             }`}
           >
             Ideas
+          </Link>
+          <Link
+            href="/admin/schedule"
+            data-active={isSchedulePage}
+            className={`relative z-10 rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-300 ${
+              isSchedulePage
+                ? "text-indigo-600"
+                : "text-slate-600 hover:text-indigo-600"
+            }`}
+          >
+            Schedule
           </Link>
         </nav>
 
@@ -178,6 +190,17 @@ export default function AdminNavbar({ isAuthenticated }: AdminNavbarProps) {
                 onClick={() => setIsOpen(false)}
               >
                 Ideas
+              </Link>
+              <Link
+                href="/admin/schedule"
+                className={`block rounded-xl px-3 py-2 text-base font-medium transition-colors ${
+                  isSchedulePage
+                    ? "bg-indigo-50 text-indigo-600"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+                onClick={() => setIsOpen(false)}
+              >
+                Schedule
               </Link>
               <div className="border-t border-slate-200/50 mt-2 pt-2">
                 <Link
