@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 
 type NavbarProps = {
-  currentPage?: "dashboard" | "calendar" | "tracking" | "ideas";
+  currentPage?: "dashboard" | "calendar" | "tracking" | "ideas" | "booking";
 };
 
 export default function Navbar({ currentPage }: NavbarProps) {
@@ -89,6 +89,17 @@ export default function Navbar({ currentPage }: NavbarProps) {
           >
             Ideas
           </Link>
+          <Link
+            href="/booking"
+            data-active={currentPage === "booking"}
+            className={`relative z-10 rounded-full px-4 py-1.5 text-sm font-medium transition-colors duration-300 ${
+              currentPage === "booking"
+                ? "text-indigo-600"
+                : "text-slate-600 hover:text-indigo-600"
+            }`}
+          >
+            Booking
+          </Link>
         </nav>
 
         {/* Mobile Menu Button */}
@@ -172,6 +183,17 @@ export default function Navbar({ currentPage }: NavbarProps) {
                 onClick={() => setIsOpen(false)}
               >
                 Ideas
+              </Link>
+              <Link
+                href="/booking"
+                className={`block rounded-xl px-3 py-2 text-base font-medium transition-colors ${
+                  currentPage === "booking"
+                    ? "bg-indigo-50 text-indigo-600"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+                onClick={() => setIsOpen(false)}
+              >
+                Booking
               </Link>
             </div>
           </div>
