@@ -164,6 +164,140 @@ export async function cancelBooking(id: string): Promise<Booking | null> {
   return getBookingById(id);
 }
 
+// Helper function to get user's bookings for a specific date and category
+export async function getUserBookingsForDateAndCategory(
+  userEmail: string,
+  date: string,
+  category: string
+): Promise<Booking[]> {
+  const collection = await getBookingsCollection();
+  return collection
+    .find({
+      userEmail,
+      date,
+      category,
+      status: "CONFIRMED",
+    })
+    .sort({ startTime: 1 })
+    .toArray();
+}
+
+// Helper function to get the longest consecutive booking block for a user on a specific date
+export function getLongestConsecutiveBlock(bookings: Booking[]): { start: number; end: number; hours: number } | null {
+  if (bookings.length === 0) {
+    return null;
+  }
+
+  const timeToHour = (time: string): number => parseInt(time.split(":")[0]);
+  
+  // Sort bookings by start time
+  const sorted = [...bookings].sort((a, b) => {
+    const aStart = timeToHour(a.startTime);
+    const bStart = timeToHour(b.startTime);
+    return aStart - bStart;
+  });
+
+  let longestStart = timeToHour(sorted[0].startTime);
+  let longestEnd = timeToHour(sorted[0].endTime);
+  let longestHours = longestEnd - longestStart;
+
+  let currentStart = longestStart;
+  let currentEnd = longestEnd;
+
+  for (let i = 1; i < sorted.length; i++) {
+    const nextStart = timeToHour(sorted[i].startTime);
+    const nextEnd = timeToHour(sorted[i].endTime);
+
+    // Check if consecutive (adjacent or overlapping)
+    if (nextStart <= currentEnd) {
+      // Extend current block
+      currentEnd = Math.max(currentEnd, nextEnd);
+    } else {
+      // Gap found, check if current block is longer
+      const currentHours = currentEnd - currentStart;
+      if (currentHours > longestHours) {
+        longestStart = currentStart;
+        longestEnd = currentEnd;
+        longestHours = currentHours;
+      }
+      // Start new block
+      currentStart = nextStart;
+      currentEnd = nextEnd;
+    }
+  }
+
+  // Check the final block
+  const currentHours = currentEnd - currentStart;
+  if (currentHours > longestHours) {
+    longestStart = currentStart;
+    longestEnd = currentEnd;
+    longestHours = currentHours;
+  }
+
+  return {
+    start: longestStart,
+    end: longestEnd,
+    hours: longestHours,
+  };
+}
+
+// Helper function to calculate total consecutive hours with a new booking
+// This only checks if the new booking would extend an existing consecutive block beyond 2 hours
+export function calculateConsecutiveHours(
+  existingBookings: Booking[],
+  newStartTime: string,
+  newEndTime: string
+): number {
+  // Convert time strings to hours for comparison
+  const timeToHour = (time: string): number => parseInt(time.split(":")[0]);
+  const newStart = timeToHour(newStartTime);
+  const newEnd = timeToHour(newEndTime);
+  const newDuration = newEnd - newStart;
+
+  if (existingBookings.length === 0) {
+    return newDuration;
+  }
+
+  // Check if the new booking is consecutive (adjacent) to any existing booking
+  let isConsecutive = false;
+  
+  for (const booking of existingBookings) {
+    const existingStart = timeToHour(booking.startTime);
+    const existingEnd = timeToHour(booking.endTime);
+
+    // Check if bookings are consecutive (adjacent in time)
+    if (existingEnd === newStart || newEnd === existingStart) {
+      isConsecutive = true;
+      break;
+    }
+  }
+
+  // If not consecutive to any existing booking, return just the new duration (it's a separate block)
+  if (!isConsecutive) {
+    return newDuration;
+  }
+
+  // If consecutive, calculate the total span of consecutive bookings
+  // Collect all bookings that are part of this consecutive block
+  const timeToHourFn = timeToHour;
+  let minStart = newStart;
+  let maxEnd = newEnd;
+
+  for (const booking of existingBookings) {
+    const existingStart = timeToHourFn(booking.startTime);
+    const existingEnd = timeToHourFn(booking.endTime);
+
+    // Check if this booking is part of the consecutive chain
+    // A booking is part of the chain if it overlaps or is adjacent to our current block
+    if (!(existingEnd < minStart || existingStart > maxEnd)) {
+      minStart = Math.min(minStart, existingStart);
+      maxEnd = Math.max(maxEnd, existingEnd);
+    }
+  }
+
+  return maxEnd - minStart;
+}
+
 export async function getAvailability(
   date: string,
   category: string,

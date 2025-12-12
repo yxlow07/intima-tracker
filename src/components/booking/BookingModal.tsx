@@ -116,17 +116,29 @@ export default function BookingModal({ option, onClose }: BookingModalProps) {
     return day !== 0 && day !== 6; // 0 = Sunday, 6 = Saturday
   };
 
-  // Generate date options (next 14 days, weekdays only)
+  // Generate date options
+  // Discussion rooms: only today (if it's a weekday)
+  // Other facilities: next 5 weekdays
   const dateOptions: { value: string; label: string }[] = [];
   const date = new Date();
-  while (dateOptions.length < 5) {
+  
+  if (option.id === "discussion") {
+    // For discussion rooms, only allow same-day booking
     if (isWeekday(date)) {
       const dateStr = date.toISOString().split("T")[0];
-      const daysFromNow = Math.floor((date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-      const label = daysFromNow === 0 ? "Today" : daysFromNow === 1 ? "Tomorrow" : date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-      dateOptions.push({ value: dateStr, label });
+      dateOptions.push({ value: dateStr, label: "Today" });
     }
-    date.setDate(date.getDate() + 1);
+  } else {
+    // For other facilities, allow next 5 weekdays
+    while (dateOptions.length < 5) {
+      if (isWeekday(date)) {
+        const dateStr = date.toISOString().split("T")[0];
+        const daysFromNow = Math.floor((date.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        const label = daysFromNow === 0 ? "Today" : daysFromNow === 1 ? "Tomorrow" : date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+        dateOptions.push({ value: dateStr, label });
+      }
+      date.setDate(date.getDate() + 1);
+    }
   }
 
   // Ensure selected date is a weekday on initial load
@@ -211,8 +223,8 @@ export default function BookingModal({ option, onClose }: BookingModalProps) {
         <div className="flex-1 overflow-y-auto p-6">
           {step === "select" && (
             <div className="space-y-6">
-              {/* Date Selection - Hidden for Pool Table */}
-              {option.id !== "pool" && (
+              {/* Date Selection - Hidden for Discussion Rooms and Pool Table */}
+              {option.id !== "discussion" && option.id !== "pool" && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     Select Date
