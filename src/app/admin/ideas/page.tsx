@@ -423,7 +423,6 @@ export default function AdminAffiliateIdeasPage() {
                             onClick={() => deleteIdea(idea.id)}
                             className="text-rose-600 hover:text-rose-900">
                             Delete
-                            Delete
                           </button>
                         </td>
                       </tr>
