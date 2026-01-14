@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   devIndicators: false,
   output: "standalone",
+  "allowedDevOrigins": ["http://localhost:3000"],
 };
 
 export default nextConfig;
