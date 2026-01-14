@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import ServiceWorkerRegister from "./ServiceWorkerRegister";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -22,9 +23,9 @@ export const metadata: Metadata = {
     telephone: false,
   },
   icons: {
-    icon: "/icon-192x192.png",
-    shortcut: "/icon-192x192.png",
-    apple: "/icon-192x192.png",
+    icon: "/android/android-launchericon-192-192.png",
+    shortcut: "/android/android-launchericon-192-192.png",
+    apple: "/ios/192.png",
   },
 };
 
@@ -39,6 +40,7 @@ export default function RootLayout({
         {children}
         <Analytics />
         <SpeedInsights />
+        <ServiceWorkerRegister />
       </body>
     </html>
   );
