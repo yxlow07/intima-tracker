@@ -14,7 +14,17 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
-        source: "/:path((?!ideas|api|_next|static|public|favicon.ico).*)",
+        source: "/admin",
+        destination: "/admin/ideas",
+        permanent: false,
+      },
+      {
+        source: "/admin/:path((?!ideas|login).*)",
+        destination: "/admin/ideas",
+        permanent: false,
+      },
+      {
+        source: "/:path((?!ideas|admin|api|_next|static|public|favicon.ico).*)",
         destination: "/ideas",
         permanent: false,
       },
