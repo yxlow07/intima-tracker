@@ -23,11 +23,6 @@ const nextConfig: NextConfig = {
         destination: "/admin/ideas",
         permanent: false,
       },
-      {
-        source: "/:path((?!ideas|admin|api|_next|static|public|favicon.ico).*)",
-        destination: "/ideas",
-        permanent: false,
-      },
     ];
   },
 };
